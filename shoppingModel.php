@@ -45,13 +45,6 @@ function addCart($pID, $uID){
 		mysqli_stmt_close($stmt); // Close the first statement
 
 	}
-	// //結帳後，商品庫存量減一
-	// $sql4 = "update product set stock = stock - 1 where pID=?";
-	// $stmt = mysqli_prepare($db, $sql4);
-	// mysqli_stmt_bind_param($stmt, "i", $pID);
-	// mysqli_stmt_execute($stmt);
-	// mysqli_stmt_close($stmt); 
-
 
 	return True;
 }

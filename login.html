@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+        <style>
+            body {
+                font-family: 'Arial', sans-serif; /* 設定字體為Arial或sans-serif */
+                background-color: #e7f1ff; /* 設定背景顏色為淡藍色 */
+                color: #333; /* 設定文字顏色為深灰色 */
+                margin: 0; /* 設定外邊距為0 */
+                padding: 0; /* 設定內邊距為0 */
+                display: flex; /* 使用flex布局 */
+                justify-content: center; /* 水平居中對齊 */
+                align-items: center; /* 垂直居中對齊 */
+                height: 100vh; /* 設定高度為視窗高度的100% */
+            }
+    
+            #main {
+                width: 800px; /* 設定內容區域寬度為800像素 */
+                padding: 20px; /* 設定內邊距為20像素 */
+                background-color: white; /* 設定背景顏色為白色 */
+                border-radius: 8px; /* 設定圓角半徑為8像素 */
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* 添加陰影效果 */
+                text-align: center; /* 文字居中對齊 */
+                margin: 0 auto; /* 水平置中 */
+            }
+    
+            h1, h2 {
+                color: #0056b3; /* 設定標題文字顏色為深藍色 */
+            }
+    
+            input[type="text"], select, input[type='button'] {
+                padding: 10px; /* 設定內邊距為10像素 */
+                margin: 10px 0; /* 設定上下邊距為10像素，左右邊距為0，確保上下間距一致 */
+                border: 1px solid #b8daff; /* 設定邊框為淺藍色 */
+                border-radius: 5px; /* 設定圓角半徑為5像素 */
+                box-sizing: border-box; /* 設定框模型為邊框盒模型 */
+                width: 100%; /* 設定寬度為100% */
+                max-width: 300px; /* 限制最大寬度為300像素 */
+            }
+    
+            select {
+                background-color: #f4f8ff; /* 設定選擇框的背景色為非常淺的藍色 */
+            }
+    
+            input[type='button'] {
+                background-color: #007bff; /* 設定按鈕背景色為鮮艷的藍色 */
+                color: white; /* 設定文字顏色為白色 */
+                border: none; /* 移除邊框 */
+                cursor: pointer; /* 設定滑鼠游標為手指指示 */
+                font-size: 16px; /* 設定字體大小為16像素 */
+                transition: background-color 0.3s; /* 添加背景色變化的過渡效果 */
+            }
+    
+            input[type='button']:hover {
+                background-color: #0056b3; /* 鼠標懸停時的背景色為深藍色 */
+            }
+    
+            @media (max-width: 800px) {
+                #main {
+                    width: 95%; /* 在螢幕寬度小於800像素時，設定內容區域寬度為95% */
+                }
+            }
+            
+            .form-group {
+                text-align: center; /* 水平居中對齊 */
+                display: block;
+                margin-bottom: 15px;
+            }
+
+            .form-group label {
+                display: block;
+            }
+
+            .buttons {
+                display: flex;
+                justify-content: space-between; /* Add space between buttons */
+            }
+
+            .buttons input[type='button'] {
+                margin: 0 10px; /* Add margin to buttons */
+            }
+        </style>
+    </head>
+	
+	<body >
+	<hr />
+	<div id="main">
+	<div id="list" v-if="UI=='main'">
+		<h2>註冊</h2>
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name" v-model="newacc.name"/>
+        </div>
+        <div class="form-group">
+            <label for="id">ID:</label>
+            <input type="text" id="id" v-model="newacc.account"/>
+        </div>
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="text" id="password" v-model="newacc.password"/>
+        </div>
+        <div class="form-group">
+            <label for="role">Role:</label>
+            <select id="role" v-model="newacc.role">
+                <option value="1" selected>客戶</option>
+                <option value="2">商家</option>
+                <option value="3">物流</option>
+            </select>
+        </div>
+        <div class="buttons">
+            <input type='button' @click="register()" value="註冊"/>
+            <input type='button' @click="tologin()" value="登入畫面"/>
+        </div>
+	</div>
+    <div v-if="UI=='success'">
+        <h2>成功註冊</h2>
+        <input type='button' @click="tologin()" value="登入畫面"/>
+    </div>
+    <div v-if="UI=='loginForm'">
+        <h2>登入畫面</h2>
+        ID: <input type="text"  v-model="loginacc.account"/> <br/>
+        Password: <input type="text" v-model="loginacc.password" />
+        <input type='button' @click="login()" value="login"/> <br/>
+    </div>
+
+
+    <div v-if="UI=='DeliverySuccessLogin'">
+        <h2>Delivery登入成功</h2>
+    </div>
+
+    <div v-if="UI=='DeliveryFailLogin'">
+        <h2>Delivery 登入失敗</h2>
+    </div>
+
+
+
+	</div>
+	<script>
+	const todoApp= Vue.createApp({
+		data() {
+			return {
+				UI: 'main',
+				dat: [],
+				newacc: {
+                    //uid: -1,
+					name: '',
+                    account: '',
+					password: '',
+					role: '',
+				},
+                loginacc: {
+                    account: '',
+                    password: '',
+                }
+
+			}
+		},
+		methods: {
+            register: function () {
+			const that=this;
+			let mydat = new FormData();
+                mydat.append( "dat", JSON.stringify(this.newacc) );
+                
+                let url="loginCheck.php?act=register";
+                fetch(url,{
+                    method: 'POST',
+                    body: mydat // 將表單物件放入fetch的body屬性
+                })
+                .then(function(res){return res.text(); }) //取得傳回值，轉為文字
+                .then(function(data){ 
+                    that.setUI('success');
+                })
+            },
+            login: function () {
+            const that = this;
+            let mydat = new FormData();
+            mydat.append("dat", JSON.stringify(this.loginacc));
+            let url = "loginCheck.php?act=login";
+
+            fetch(url, {
+                method: 'POST',
+                body: mydat
+            })
+            .then(function(res) { return res.json(); }) // 取得傳回值，轉為 json
+            .then(function(data) {
+                console.log('-------------------');
+                console.log(data); // {success: true}
+                if (data.success==true) {
+                    switch (data.role) {
+                        case '1':
+                        window.location.href = 'shoppingview.html?uID=' + data.uID;
+                            break;
+                        case '2':
+                        window.location.href = 'seller.html?uID=' + data.uID;
+                            break;
+                        case '3':
+                        window.location.href = 'car.html';//跳轉物流
+                            break;
+                    }
+                    
+                } else {
+                    switch (data.role) {
+                        case '1':
+                            that.setUI('UserFailLogin'); 
+                            break;
+                        case '2':
+                            that.setUI('SellFailLogin');
+                            break;
+                        case '3':
+                            that.setUI('DeliveryFailLogin');
+                            break;
+                    }
+                }
+            })
+            },
+
+            tologin: function () {
+                const that=this;
+                that.setUI('loginForm');
+            },
+			setEditUI: function(pID, name, price, stock, content) {
+				this.newacc.id = pID;
+                this.newacc.name = name;
+                this.newacc.price = price;
+                this.newacc.stock = stock;
+                this.newacc.content = content;
+				this.setUI('editForm');
+			},
+            checkLogin: function() {
+                /*
+                const role=Cookies.get('loginRole');
+                sessionStorage.setItem('role', role)
+                console.log(role, this.login.myRole);
+                */
+                if (this.myRole >0) {
+                    this.setUI('main');
+                } else {
+                    this.setUI('register');
+                }
+            },
+			setUI: function(page) {
+				this.UI=page;
+			}
+		},
+		created() {
+			//this.register();
+		}
+	}).mount("#main");
+	</script>
+	</body>
+    
+</html>

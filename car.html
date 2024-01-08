@@ -1,0 +1,343 @@
+<html><head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>	
+
+	<link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background-color: #1a1a1a;
+            color: #c0c0c0;
+            margin: 0;
+            padding: 0;
+        }
+
+        #main {
+            width: 80%;
+            margin: 20px auto;
+            background-color: #262626;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+
+        h1 {
+            color: #00ffff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #333;
+        }
+
+        table, th, td {
+            border: 1px solid #00ffff;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #00ffff;
+            color: #000;
+        }
+
+        button {
+            background-color: #00ffff;
+            color: #000;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #008080;
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 600px) {
+            #main {
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+	
+	<body >
+	<hr />
+	<div id="main">
+	<div v-if="UI=='main'"> 
+		<h1>物流</h1>
+		<table border=1>
+			<tr><td>訂單編號</td><td>查看更多</td>
+			<tr v-for="product in dat">
+				<td>{{product.oID}}</td>
+				<td><button @click="cargetOrderDetail(product.oID)">詳細資訊</button></td>
+				</table>
+	</div>
+	<!-- 訂單詳細內容頁面 -->
+    <div v-if="UI=='orderDetail'">
+    <h1>訂單</h1> 
+    <table border=1>
+        <tr>
+            <td>商家id</td>
+            <td>狀態</td>
+            <td>處理訂單</td></tr>
+        </tr>
+        <tr v-for="orderItems in dat">
+            <td>{{orderItems.uID}}</td>
+            <td>{{orderItems.status}}</td>
+			<td v-if="orderItems.status === '已寄送'"><button @click="cardealProduct(this.currentOID, orderItems.uID)">確認</button></td>
+        </tr>
+    </table>
+    <button @click="carlistorder()">回到訂單列表</button>	
+    </div>
+	</div>
+	<script>
+	const todoApp= Vue.createApp({
+		data() {
+			return {
+				UI: 'main',
+				dat: [],
+				newproduct: {
+					id: -1,
+					name: '',
+					price: '',
+					stock: '',
+					content: ''
+				},
+                currentOID: 0, // 目前點進去的訂單ID
+			}
+		},
+		methods: {
+			loadList: function () {
+				const that=this; //this  ==> stands for vm6. let's save `this` to `that`
+				fetch('shoppingControl.php?act=listProductInfo')
+				.then(function(response) {
+					return response.json();
+				})
+				.then(function(myJson) {
+					//we are inside the callback function, now `this` means the function, not vm6
+					//we will use `that` to access vm6
+	
+					that.dat = myJson;
+					//todoApp.dat = myJson;
+				});
+			},
+			listcart: function () {
+				const that=this; 
+				fetch('shoppingControl.php?act=listCart')
+				.then(function(response) {
+					return response.json();
+				})
+				.then(function(myJson) {
+	
+	
+					that.dat = myJson;
+	
+				});
+				this.setUI('cart');
+			},
+			getProductDetail: function (id) {
+				const that=this;
+				
+				let url="shoppingControl.php?act=getProductDetail&id="+id;
+				fetch(url)
+				.then(function(response) {
+					return response.json();
+				})
+				.then(function(myJson) {
+	
+	
+					that.dat = myJson;
+	
+				});
+				this.setUI('detail');
+			},
+			back: function () {
+				const that=this;
+				that.setUI('main');
+				that.loadList();
+			},
+            delProduct: function (id) {
+				const that=this;
+				console.log(id);
+				let url="shoppingControl.php?act=delProduct&id="+id;
+				fetch(url,{
+					method: 'POST'
+				})
+				.then(function(res){return res.text(); }) //取得傳回值，轉為文字
+				.then(function(data){
+					that.setUI('main');
+				    that.loadList();
+				})
+			},
+            updateProduct: function () {
+			const that=this;
+			let mydat = new FormData();
+                mydat.append( "dat", JSON.stringify(this.newproduct) );
+
+                let url="shoppingControl.php?act=updateProduct";
+                fetch(url,{
+                    method: 'POST',
+                    body: mydat // 將表單物件放入fetch的body屬性
+                })
+                .then(function(res){return res.text(); }) //取得傳回值，轉為文字
+                .then(function(data){ 
+                    console.log(data);
+                    that.setUI('main');
+                    that.loadList();
+                })
+            },
+            addProduct: function () {
+			const that=this;
+			let mydat = new FormData();
+                mydat.append( "dat", JSON.stringify(this.newproduct) );
+
+                let url="shoppingControl.php?act=addProduct";
+                fetch(url,{
+                    method: 'POST',
+                    body: mydat // 將表單物件放入fetch的body屬性
+                })
+                .then(function(res){return res.text(); }) //取得傳回值，轉為文字
+                .then(function(data){ 
+                    console.log(data);
+                    that.setUI('main');
+                    that.loadList();
+                })
+            },
+			addJob: function () {
+			const that=this;
+			let mydat = new FormData();
+                mydat.append( "dat", JSON.stringify(this.newproduct) );
+
+                let url="shoppingControl.php?act=addPro";
+                fetch(url,{
+                    method: 'POST',
+                    body: mydat // 將表單物件放入fetch的body屬性
+                })
+                .then(function(res){return res.text(); }) //取得傳回值，轉為文字
+                .then(function(data){ 
+                    console.log(data);
+                    that.setUI('main');
+                    that.loadList();
+                })
+            },
+            Cancel: function () {
+                const that=this;			
+                that.setUI('main');
+                that.loadList();
+            },
+			carlistorder: function () { //列訂單
+				const that=this; 
+				fetch('shoppingControl.php?act=carlistAllorder')
+				.then(function(response) {
+					return response.json();
+				})
+                .then(function(myJson) {
+                    that.dat = myJson;
+					that.setUI('main');
+
+                });
+			},
+			setEditUI: function(pID, name, price, stock, content) {
+				this.newproduct.id = pID;
+                this.newproduct.name = name;
+                this.newproduct.price = price;
+                this.newproduct.stock = stock;
+                this.newproduct.content = content;
+				this.setUI('editForm');
+			},
+            // 處理訂單
+            dealProduct: function (oID) {
+                const that=this;
+                let url="shoppingControl.php?act=dealProduct&oID="+oID;
+                fetch(url,{
+                    method: 'POST',
+                })
+                .then(function(res){return res.text(); }) //取得傳回值，轉為文字
+                .then(function(data){ 
+                    console.log(data);
+                    that.carlistorder();
+                })
+            },
+			//商家將已寄送-> 已送達
+			cardealProduct: function (oID, uID) {
+				const that=this;
+                console.log(uID+"這是Uid");
+				let url="shoppingControl.php?act=cardealProduct&oID="+oID+"&uID="+uID;
+                console.log(url);
+				fetch(url,{
+					method: 'POST',
+				})
+				.then(function(res){return res.text(); }) //取得傳回值，轉為文字
+				.then(function(data){ 
+					console.log(data);
+					that.carlistorder();
+				})
+			},
+            // 寄送訂單
+            sendProduct: function (oID) {
+                const that=this;
+                let url="shoppingControl.php?act=sendProduct&oID="+oID;
+                fetch(url,{
+                    method: 'POST',
+                })
+                .then(function(res){return res.text(); }) //取得傳回值，轉為文字
+                .then(function(data){ 
+                    console.log(data);
+                    that.carlistorder();
+                })
+            },
+			// 送達訂單
+			achieveProduct: function (oID) {
+                const that=this;
+                let url="shoppingControl.php?act=achieveProduct&oID="+oID;
+                fetch(url,{
+                    method: 'POST',
+                })
+                .then(function(res){return res.text(); }) //取得傳回值，轉為文字
+                .then(function(data){ 
+                    console.log(data);
+                    that.carlistorder();
+                })
+            },
+			cargetOrderDetail: function (oID) {
+				const that=this;
+                that.currentOID = oID;
+				let url="shoppingControl.php?act=cargetOrderDetail&oID="+oID;
+				console.log(url);
+				fetch(url)
+				.then(function(response) {
+					return response.json();
+				})
+				.then(function(myJson) {
+					that.dat = myJson;
+				});
+				this.setUI('orderDetail');
+			},
+			setAddUI: function() {
+				this.newproduct={
+					id: -1,
+					name: '',
+					price: '',
+					stock: '',
+					content: ''
+				};
+				this.setUI('addForm');
+			},
+			setUI: function(page) {
+				this.UI=page;
+			}
+		},
+		created() {
+			this.carlistorder();
+		}
+	}).mount("#main");
+	</script>
+	</body></html>
